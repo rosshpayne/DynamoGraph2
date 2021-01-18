@@ -172,8 +172,18 @@ func populateTyCaches(allTypes blk.TyIBlock) {
 			// scalar type or abstract type e.g [person]
 			//
 			if v.Ty[0] == '[' {
-				a = blk.TyAttrD{Name: v.Atr, DT: "Nd", C: v.C, Ty: v.Ty[1 : len(v.Ty)-1], P: v.P, Pg: v.Pg, N: v.N, IncP: v.IncP, Ix: v.Ix}
+				// abstract type
+				card := v.Cardinality
+				if len(v.Cardinality) == 0 {
+					card = "1:N"
+				} else {
+					if v.Cardinality != "1:1" && v.Cardinality != "1:N" {
+						panic(fmt.Errorf("Type data error: wrong cardinality value [%s]", v.Cardinality))
+					}
+				}
+				a = blk.TyAttrD{Name: v.Atr, DT: "Nd", C: v.C, Ty: v.Ty[1 : len(v.Ty)-1], P: v.P, Pg: v.Pg, N: v.N, IncP: v.IncP, Ix: v.Ix, Card: card}
 			} else {
+				// scalar
 				a = blk.TyAttrD{Name: v.Atr, DT: v.Ty, C: v.C, P: v.P, N: v.N, Pg: v.Pg, IncP: v.IncP, Ix: v.Ix}
 			}
 			tc = append(tc, a)

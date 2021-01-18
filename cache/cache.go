@@ -81,6 +81,10 @@ func GetCache() *GraphCache {
 	return &GraphC
 }
 
+func (n *NodeCache) GetMap() map[SortKey]*blk.DataItem {
+	return n.m
+}
+
 // ====================================== init =====================================================
 
 func init() {
@@ -349,11 +353,16 @@ func (nc *NodeCache) UnmarshalNodeCache(nv ds.ClientNV, ty_ ...string) error {
 		return ErrCacheEmpty
 	}
 	var (
-		sortk, attrKey string
-		attrDT         string
-		ty             string // short name for item type e.g. Pn (for Person)
-		ok             bool
-		err            error
+		sortk  string
+		attrDT string
+		ok     bool
+		// sortk2  string
+		// attrDT2 string
+		// ok2     bool
+		attrKey string
+		ty      string // short name for item type e.g. Pn (for Person)
+
+		err error
 	)
 
 	// for k := range nc.m {
@@ -378,17 +387,6 @@ func (nc *NodeCache) UnmarshalNodeCache(nv ds.ClientNV, ty_ ...string) error {
 		return err
 	}
 
-	//cTy := ty
-
-	var (
-		cTys  []string
-		cTys_ blk.TyAttrBlock
-	)
-	cTys = append(cTys, ty)
-	cTys_ = append(cTys_, blk.TyAttrD{})
-	//
-	// genSortK - generate SortK given an attribute name
-	//
 	genSortK := func(attr string) (string, string, bool) {
 		var (
 			pd     strings.Builder
@@ -397,58 +395,71 @@ func (nc *NodeCache) UnmarshalNodeCache(nv ds.ClientNV, ty_ ...string) error {
 			ok     bool
 		)
 		// Scalar attribute
-		if strings.IndexByte(attr, ':') == -1 {
-			if aty, ok = types.TypeC.TyAttrC[cTys[0]+":"+attr]; !ok {
+		attr_ := strings.Split(attr, ":")
+		ty := ty //cTys[0]
+		pd.WriteString("A#")
+		c := 1
+		colons := strings.Count(attr, ":")
+		for _, j := range attr_ {
+			if len(j) == 0 {
+				break
+			}
+			if aty, ok = types.TypeC.TyAttrC[ty+":"+j]; !ok {
 				return "", "", false
 			}
 			attrDT = aty.DT
-			pd.WriteString("A#")
-			pd.WriteString(aty.P)
-			pd.WriteString("#:")
-			pd.WriteString(aty.C)
-			return pd.String(), attrDT, true
+			// uid-predicates:
+			// two promotes child.updpred:scalar
+			// two promotes child.updpred:grandchild.uidpred:scalar
+			switch colons {
+			case 0:
+				// scalar
+				pd.WriteString(aty.P)
+				pd.WriteString("#:")
+				pd.WriteString(aty.C)
+			case 1:
+				if aty.DT != "Nd" {
+					attrDT = "UL" + aty.DT
+				}
+				// single promote of scalar
+				// scalar only
+				switch c {
+				case 1:
+					pd.WriteString("G#:")
+					pd.WriteString(aty.C)
+					c++
+				case 2:
+					pd.WriteString("#:")
+					pd.WriteString(aty.C)
+				}
+			case 2:
+				// double promote of scalars
+				// uid-preds only
+				if aty.DT != "Nd" {
+					attrDT = "UL" + aty.DT
+				}
+				switch c {
+				case 1:
+					pd.WriteString("G#:")
+					pd.WriteString(aty.C)
+					c++
+				case 2:
+					pd.WriteString("#G#:")
+					pd.WriteString(aty.C)
+					c++
+				case 3:
+					pd.WriteString("#:")
+					pd.WriteString(aty.C)
+				}
+			}
+			if len(aty.Ty) > 0 {
+				// change current type
+				ty = aty.Ty
+			}
+
 		}
-		attr_ := strings.Split(attr, ":")
-		cnt := strings.Count(attr, ":")
-
-		switch len(attr_[len(attr_)-1]) {
-
-		case 0: // change current type (cTY) - film.genre:, film.director:actor.performance:
-
-			if aty, ok = types.TypeC.TyAttrC[cTys[cnt-1]+":"+attr_[len(attr_)-2]]; !ok {
-				panic(fmt.Errorf("attr %s.%q does not exist", cTys[cnt-1], attr_[len(attr_)-2]))
-				//return "", false
-			}
-
-			if len(cTys)-1 == cnt {
-				cTys[cnt] = aty.Ty
-				cTys_[cnt] = aty
-			} else {
-				cTys = append(cTys, aty.Ty)
-				cTys_ = append(cTys_, aty)
-			}
-			pd.WriteString(cTys_[cnt].P)
-			pd.WriteString("#G#:")
-			pd.WriteString(cTys_[cnt].C)
-			return pd.String(), "Nd", true
-
-		default: // scalar - film.director:name, film.director:actor.performance:performance.film:name
-
-			if aty, ok = types.TypeC.TyAttrC[cTys[cnt]+":"+attr_[len(attr_)-1]]; !ok {
-				panic(fmt.Errorf("attr %q does not exist", cTys[cnt]+":"+attr_[len(attr_)-1]))
-			}
-			attrDT = "UL" + aty.DT
-			pd.WriteString(cTys_[cnt].P)
-			pd.WriteString("#G#:")
-			pd.WriteString(cTys_[cnt].C)
-			pd.WriteString("#:")
-			pd.WriteString(aty.C)
-			return pd.String(), attrDT, true
-
-		}
-
+		return pd.String(), attrDT, true
 	}
-
 	// This data is stored in uid-pred UID item that needs to be assigned to each child data item
 	var State [][]int
 	var OfUIDs [][]byte
@@ -471,10 +482,13 @@ func (nc *NodeCache) UnmarshalNodeCache(nv ds.ClientNV, ty_ ...string) error {
 		//
 		// field name repesents a scalar. It has a type that we use to generate a sortk <partition>#G#:<uid-pred>#:<scalarpred-type-abreviation>
 		//
+		//sortk2, attrDT2, ok2 = genSortK2(a.Name)
+		// no match between NV name and type attribute name
 		if sortk, attrDT, ok = genSortK(a.Name); !ok {
 			// no match between NV name and type attribute name
 			continue
 		}
+		//fmt.Println("UnmarshalNodeCache: a.Name, sortk, attrDT: ", a.Name, sortk, attrDT) //, sortk2, attrDT2, ok2)
 		//
 		// grab the *blk.DataItem from the cache for the nominated sortk.
 		// we could query the child node to get this data or query the #G data which is its copy of the data

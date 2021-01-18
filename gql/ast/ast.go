@@ -1,10 +1,12 @@
 package ast
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 
+	blk "github.com/DynamoGraph/block"
 	"github.com/DynamoGraph/ds"
 	expr "github.com/DynamoGraph/gql/expression"
 	"github.com/DynamoGraph/gql/internal/db"
@@ -33,6 +35,7 @@ type FilterI interface {
 // 	innerArg()
 // }
 type SelectI interface {
+	Name() string
 	AssignSelectList(SelectList)
 	Initialise()
 	//	hasNoData() bool
@@ -167,7 +170,8 @@ type UidPred struct {
 	//
 	// node edge data assoicated with this uidpred in GQL stmt
 	//
-	lvl    int     // depth of graph (TODO is this used???)
+	lvl    int // depth of graph (TODO is this used???)
+	l      sync.Mutex
 	nodes  NdNvMap // scalar nodes including PKey associated with each nodes belonging to this edge.
 	nodesc NdNv
 	nodesi NdIdx // nodes index into parent uid-pred's UL data. e.g. to get Age of this node - nv:=nodes.parent.nodes[uid]; age:= nv["Age"].([][]int); age[nodesi.i][nodesi.j]
@@ -236,11 +240,9 @@ func (u *UidPred) assignData(uid string, nvc ds.ClientNV, idx index) ds.NVmap {
 		nvm[v.Name] = v
 	}
 	// save this edge (represented by key UID by assigning key to nodes).
-	u.d.Lock()
 	u.nodes[uid] = nvm
 	u.nodesc[uid] = nvc
 	u.nodesi[uid] = idx // index into UL cache data. TODO: is this used?
-	u.d.Unlock()
 	return nvm
 }
 
@@ -261,6 +263,7 @@ func (u *UidPred) genNV(ty string) ds.ClientNV {
 			// uid-pred entry in NV
 			un := x.Name() + ":"
 			//
+			fmt.Println()
 			nv := &ds.NV{Name: un}
 			nvc = append(nvc, nv)
 			// add elements in uid-pred select list
@@ -290,6 +293,46 @@ func (u *UidPred) genNV(ty string) ds.ClientNV {
 						// filter predicate not in select list - add NV entry but mark as invisible (ignore) so it is not output
 						nv := &ds.NV{Name: un + v, Ignore: true}
 						nvc = append(nvc, nv)
+					}
+				}
+			}
+			//
+			// check for nested types with cardinality 1:1 and add them to []NV
+			//
+			var (
+				aty blk.TyAttrD
+				ok  bool
+			)
+			if aty, ok = types.TypeC.TyAttrC[ty+":"+x.Name()]; !ok {
+				panic(fmt.Errorf("%s not in %s", ty, x.Name()))
+				continue // ignore this attribute as it is in current type
+			}
+			paty := aty
+			for _, v := range x.Select {
+
+				switch y := v.Edge.(type) {
+
+				case *UidPred:
+
+					if aty, ok = types.TypeC.TyAttrC[paty.Ty+":"+y.Name()]; !ok {
+						panic(fmt.Errorf("%s %s not in %s", aty.Name, aty.Ty, y.Name()))
+						continue // ignore this attribute as it is in current type
+					}
+					if aty.Card == "1:1" {
+						un := x.Name() + ":" + y.Name() + ":"
+						nv := &ds.NV{Name: un}
+						nvc = append(nvc, nv)
+
+						for _, v := range y.Select {
+
+							switch z := v.Edge.(type) {
+
+							case *ScalarPred:
+								un += z.Name()
+								nv := &ds.NV{Name: un}
+								nvc = append(nvc, nv)
+							}
+						}
 					}
 				}
 			}
@@ -550,7 +593,7 @@ func (f *GQLFunc) String() string {
 // type NdIdx map[util.UIDb64s]index
 
 type RootStmt struct {
-	Name       name_
+	Name_      name_
 	Var        *Variable
 	Lang       string
 	RootFunc   GQLFunc          // generates []uid from GSI data io.Writer Write([]byte) (int, error)
@@ -569,13 +612,16 @@ type RootStmt struct {
 
 func (r *RootStmt) AssignName(input string, loc token.Pos) {
 	//ValidateName(input, err, Loc)
-	r.Name = name_{Name: input, Loc: loc}
+	r.Name_ = name_{Name: input, Loc: loc}
 }
 
 func (r *RootStmt) AssignSelectList(s SelectList) {
 	r.Select = s
 }
 
+func (r *RootStmt) Name() string {
+	return "root"
+}
 func (r *RootStmt) AssignFilter(e *expr.Expression) {
 	r.Filter = e
 }
@@ -695,6 +741,93 @@ func (r *RootStmt) genNV(ty string) ds.ClientNV {
 					}
 				}
 			}
+
+			//
+			// check for nested types with cardinality 1:1 and add them to []NV
+			//
+			var (
+				aty blk.TyAttrD
+				ok  bool
+			)
+			if aty, ok = types.TypeC.TyAttrC[ty+":"+x.Name()]; !ok {
+				panic(fmt.Errorf("%s not in %s", ty, x.Name()))
+				continue // ignore this attribute as it is in current type
+			}
+			paty := aty
+			for _, v := range x.Select {
+
+				switch y := v.Edge.(type) {
+
+				case *UidPred:
+
+					if aty, ok = types.TypeC.TyAttrC[paty.Ty+":"+y.Name()]; !ok {
+						panic(fmt.Errorf("%s %s not in %s", aty.Name, aty.Ty, y.Name()))
+						continue // ignore this attribute as it is in current type
+					}
+					fmt.Printf("AST yy: %s %s\n", aty.Ty, aty.Card)
+					if aty.Card == "1:1" {
+						un := x.Name() + ":" + y.Name() + ":"
+						nv := &ds.NV{Name: un}
+						nvc = append(nvc, nv)
+
+						for _, v := range y.Select {
+
+							switch z := v.Edge.(type) {
+
+							case *ScalarPred:
+								un += z.Name()
+								nv := &ds.NV{Name: un}
+								nvc = append(nvc, nv)
+							}
+						}
+					}
+				}
+			}
+			// var (
+			// 	aty  blk.TyAttrD
+			// 	aty2 blk.TyAttrD
+			// 	ok   bool
+			// )
+			// fmt.Println("AST 1 : ", ty+":"+x.Name())
+			// if aty, ok = types.TypeC.TyAttrC[ty+":"+x.Name()]; !ok {
+			// 	panic(fmt.Errorf("%s not in %s", ty, x.Name()))
+			// 	continue // ignore this attribute as it is in current type
+			// }
+			// fmt.Printf("AST: %#v\n", aty)
+			// for _, v := range x.Select {
+
+			// 	switch y := v.Edge.(type) {
+
+			// 	case *UidPred:
+			// 		fmt.Println("AST 2 : ", aty.Ty+":"+y.Name())
+
+			// 		if aty2, ok = types.TypeC.TyAttrC[aty.Ty+":"+y.Name()]; !ok {
+			// 			panic(fmt.Errorf("%s not in %s", aty.Ty, y.Name()))
+			// 			continue // ignore this attribute as it is in current type
+			// 		}
+			// 		fmt.Printf("AST: %#v\n", aty2)
+			// 		if aty2.Card == "1:1" {
+			// 			fmt.Println("********************  1:1")
+			// 			un := x.Name() + ":" + y.Name() + ":"
+			// 			nv := &ds.NV{Name: un}
+			// 			nvc = append(nvc, nv)
+
+			// 			fmt.Println("AST: len(y.Select) ", len(y.Select))
+
+			// 			for _, v := range y.Select {
+
+			// 				switch z := v.Edge.(type) {
+
+			// 				case *ScalarPred:
+			// 					fmt.Println("AST: scalar ", z.Name())
+			// 					un += z.Name()
+			// 					nv := &ds.NV{Name: un}
+			// 					nvc = append(nvc, nv)
+			// 				}
+			// 			}
+			// 		}
+			// 	}
+			// }
 		}
 	}
 
@@ -706,7 +839,7 @@ func (r *RootStmt) String() string {
 
 	s.WriteByte('{')
 	s.WriteByte('\n')
-	s.WriteString(r.Name.String())
+	s.WriteString(r.Name_.String())
 	s.WriteString("(func: ")
 	s.WriteString(r.RootFunc.String())
 	if r.First > 0 {

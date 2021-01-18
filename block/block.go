@@ -322,18 +322,19 @@ type IndexBlock []*Index
 // type dictionary
 //
 type TyItem struct {
-	Nm   string   // type name
-	Atr  string   // attribute name
-	Ty   string   // DataType
-	F    []string // facets name#DataType#CompressedIdentifer
-	C    string   // compressed identifer for attribute
-	P    string   // data partition containig attribute data - TODO: is this obselete???
-	Pg   bool     // true: propagate scalar data to parent
-	N    bool     // NULLABLE. False : not null (attribute will always exist ie. be populated), True: nullable (attribute may not exist)
-	Cd   int      // cardinality - NOT USED
-	Sz   int      // average size of attribute data - NOT USED
-	Ix   string   // supported indexes: FT=Full Text (S type only), "x" combined with Ty will index in GSI Ty_Ix
-	IncP []string // (optional). List of attributes to be propagated. If empty all scalars will be propagated.
+	Nm          string   // type name
+	Atr         string   // attribute name
+	Ty          string   // DataType
+	F           []string // facets name#DataType#CompressedIdentifer
+	C           string   // compressed identifer for attribute
+	P           string   // data partition containig attribute data - TODO: is this obselete???
+	Pg          bool     // true: propagate scalar data to parent
+	N           bool     // NULLABLE. False : not null (attribute will always exist ie. be populated), True: nullable (attribute may not exist)
+	Cd          int      // cardinality - NOT USED
+	Sz          int      // average size of attribute data - NOT USED
+	Ix          string   // supported indexes: FT=Full Text (S type only), "x" combined with Ty will index in GSI Ty_Ix
+	IncP        []string // (optional). List of attributes to be propagated. If empty all scalars will be propagated.
+	Cardinality string   // 1:N , 1:1
 }
 
 type TyIBlock []*TyItem
@@ -349,6 +350,7 @@ type TyAttrD struct {
 	Pg   bool   // true: propagate scalar data to parent
 	IncP []string
 	Ix   string // index type
+	Card string
 }
 
 type TyAttrBlock []TyAttrD

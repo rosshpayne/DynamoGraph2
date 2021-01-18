@@ -43,8 +43,9 @@ func init() {
 	statTouchLvl = stat.Request{Id: stat.TouchLvl, ReplyCh: replyCh}
 	statDbFetches = stat.Request{Id: stat.NodeFetch, ReplyCh: replyCh}
 
-	fmt.Println("====================== STARTUP =====================")
 	Startup()
+
+	fmt.Println("====================== STARTUP =====================")
 }
 
 func validate(t *testing.T, result string, abort ...bool) {
@@ -113,7 +114,7 @@ func Execute(graph string, query string) *ast.RootStmt {
 	//clear monitor stats
 	stat.ClearCh <- struct{}{}
 
-	golimiter := grmgr.New("execute", 2)
+	golimiter := grmgr.New("execute", 6)
 
 	t0 = time.Now()
 	p := parser.New(graph, query)

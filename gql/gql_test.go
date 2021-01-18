@@ -276,6 +276,41 @@ func TestRootQueryAnyPlusFilter2(t *testing.T) {
 
 	validate(t, result)
 }
+
+func TestRootQueryAnyPlusFilter3(t *testing.T) {
+
+	// Friends {
+	// 	Age
+	// }
+	input := `{
+  directors(func:  eq(count(Siblings), 2))  {
+    Age
+    Name
+    Comment
+    Friends {
+    	Name
+    	Age
+    	Siblings {
+    		Name
+    		Friends {
+    			Name
+    			Age
+    			Comment
+    		}
+    	}
+    }
+  }
+}`
+	expectedTouchLvl = []int{3, 7, 12, 27}
+	expectedTouchNodes = 49
+
+	stmt := Execute("Relationship", input)
+	result := stmt.MarshalJSON()
+	t.Log(stmt.String())
+
+	validate(t, result)
+}
+
 func TestRootQuery1f(t *testing.T) {
 
 	input := `{

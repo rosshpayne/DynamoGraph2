@@ -54,7 +54,6 @@ var (
 func PowerOn(ctx context.Context, wps *sync.WaitGroup, wgEnd *sync.WaitGroup) {
 
 	defer wgEnd.Done()
-	wps.Done()
 
 	slog.Log("monitor: ", "Powering on...")
 
@@ -80,6 +79,7 @@ func PowerOn(ctx context.Context, wps *sync.WaitGroup, wgEnd *sync.WaitGroup) {
 	//       Probing both ctx.Done() and StatCH channel eats CPU and increases Dynamodb API response times by x10.
 	//       Test cases go from 50ms to 250ms
 	//
+	wps.Done()
 	for {
 
 		select {

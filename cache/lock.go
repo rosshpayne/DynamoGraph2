@@ -209,60 +209,54 @@ func (g *GraphCache) FetchNodeExec_(uid util.UID, sortk string, ty string) (*Nod
 // Why? For testing purposes it's more realistic to access non-cached node data.
 // This API is used in GQL testing.
 func (g *GraphCache) FetchNodeNonCache(uid util.UID, sortk ...string) (*NodeCache, error) {
+	// 	if len(sortk) > 0 {
+	// 		return g.FetchNode(uid, sortk...)
+	// 	}
+	// 	return g.FetchNode(uid)
+	// }
+
+	var sortk_ string
+
+	g.Lock()
 	if len(sortk) > 0 {
-		return g.FetchNode(uid, sortk...)
+		sortk_ = sortk[0]
+	} else {
+		sortk_ = "A#"
 	}
-	return g.FetchNode(uid)
+	uids := uid.String()
+	e := g.cache[uids]
+	//
+	// force db read by setting e to nil
+	//
+	e = nil
+	//
+	if e == nil {
+		e = &entry{ready: make(chan struct{})}
+		g.cache[uids] = e
+		g.Unlock()
+		// nb: type blk.NodeBlock []*DataIte
+		nb, err := db.FetchNode(uid, sortk_)
+		if err != nil {
+			return nil, err
+		}
+
+		e.NodeCache = &NodeCache{m: make(map[SortKey]*blk.DataItem), gc: g}
+		en := e.NodeCache
+		en.Uid = uid
+		for _, v := range nb {
+			en.m[v.SortK] = v
+		}
+		close(e.ready)
+	} else {
+		g.Unlock()
+		<-e.ready
+	}
+	//
+	// lock node cache. TODO: when is it unlocked?????
+	//
+
+	return e.NodeCache, nil
 }
-
-// var sortk_ string
-
-// g.Lock()
-// if len(sortk) > 0 {
-// 	sortk_ = sortk[0]
-// } else {
-// 	sortk_ = "A#"
-// }
-// uids := uid.String()
-// e := g.cache[uids]
-// //
-// // force db read by setting e to nil
-// //
-// e = nil
-// //
-// if e == nil {
-// 	e = &entry{ready: make(chan struct{})}
-// 	g.cache[uids] = e
-// 	g.Unlock()
-// 	// nb: type blk.NodeBlock []*DataIte
-// 	nb, err := db.FetchNode(uid, sortk_)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	e.NodeCache = &NodeCache{m: make(map[SortKey]*blk.DataItem), gc: g}
-// 	en := e.NodeCache
-// 	en.Uid = uid
-// 	for _, v := range nb {
-// 		en.m[v.SortK] = v
-// 	}
-// 	close(e.ready)
-// } else {
-// 	g.Unlock()
-// 	<-e.ready
-// }
-// //
-// // lock node cache. TODO: when is it unlocked?????
-// //
-// e.RLock()
-
-// e.locked = true
-// e.ffuEnabled = false
-
-// e.RUnlock()
-
-// return e.NodeCache, nil
-//}
 
 func (g *GraphCache) FetchNode(uid util.UID, sortk ...string) (*NodeCache, error) {
 	var sortk_ string
@@ -300,12 +294,13 @@ func (g *GraphCache) FetchNode(uid util.UID, sortk ...string) (*NodeCache, error
 	// lock node cache.
 	//
 	e.RLock()
-	if e.NodeCache == nil {
-		// cache has been cleared. Start again.
-		e = nil
-		g.FetchNode(uid, sortk_)
-	}
-	e.locked = true
+	//e.Lock()
+	// if e.NodeCache == nil {
+	// 	// cache has been cleared. Start again.
+	// 	e = nil
+	// 	g.FetchNode(uid, sortk_)
+	// }
+	e.locked = true // TODO - this cannot be done under a read lock
 	e.ffuEnabled = false
 	var cached bool
 	// check sortk is cached
@@ -316,12 +311,12 @@ func (g *GraphCache) FetchNode(uid util.UID, sortk ...string) (*NodeCache, error
 		}
 	}
 	if !cached {
-		e.RUnlock()
+		e.Unlock()
 		e.fetchSortK(sortk_)
 		return e.NodeCache, nil
 	}
 
-	e.RUnlock()
+	e.Unlock()
 	return e.NodeCache, nil
 }
 
@@ -521,8 +516,10 @@ func (nd *NodeCache) Unlock(s ...string) {
 
 	} else if nd.locked {
 
-		nd.RUnlock()
-		slog.Log("Unlock: ", "Success RUnlock()")
+		//	nd.RUnlock()
+		nd.RWMutex.RUnlock()
+		//slog.Log("Unlock: ", "Success RUnlock()")
+		slog.Log("Unlock: ", "Success Unlock()")
 		nd.locked = false
 	} else {
 		slog.Log("Unlock: ", "Error: Nothing unlocked ")
