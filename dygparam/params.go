@@ -1,6 +1,6 @@
 package params
 
-var GraphTable = "DyGraphOD" // can be modified by rdf.loader "i" argument
+var GraphTable = "DyGraphOD2" // can be modified by rdf.loader "i" argument
 
 const (
 	DebugOn = true
