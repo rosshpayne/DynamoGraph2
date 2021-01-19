@@ -23,12 +23,12 @@ type DBExprErr struct {
 }
 
 func newDBExprErr(rt string, pk string, sk string, err error) error {
-	er := DBExprErr{routine: rt, pkey: pk, sortk: sk, err: err}
+	er := &DBExprErr{routine: rt, pkey: pk, sortk: sk, err: err}
 	logerr(er)
 	return er
 }
 
-func (e DBExprErr) Error() string {
+func (e *DBExprErr) Error() string {
 	if len(e.sortk) > 0 {
 		return fmt.Sprintf("Expression error in %s [%s, $s]. %s", e.routine, e.pkey, e.sortk, e.err.Error())
 	}
@@ -38,7 +38,7 @@ func (e DBExprErr) Error() string {
 	return fmt.Sprintf("Expression error in %s. %s", e.routine, e.err.Error())
 }
 
-func (e DBExprErr) Unwrap() error {
+func (e *DBExprErr) Unwrap() error {
 	return e.err
 }
 
@@ -56,11 +56,11 @@ type DBSysErr struct {
 	err     error  // aws database error
 }
 
-func (e DBSysErr) Unwrap() error {
+func (e *DBSysErr) Unwrap() error {
 	return e.err
 }
 
-func (e DBSysErr) Error() string {
+func (e *DBSysErr) Error() string {
 	return fmt.Sprintf("Sytem error in %s of %s. %s", e.api, e.routine, e.err.Error())
 }
 func newDBSysErr(rt string, api string, err error) error {
@@ -80,7 +80,7 @@ func newDBSysErr(rt string, api string, err error) error {
 			err = ErrAttributeDoesNotExist
 		}
 	}
-	syserr := DBSysErr{routine: rt, api: api, err: err}
+	syserr := &DBSysErr{routine: rt, api: api, err: err}
 	logerr(syserr)
 	return syserr
 }
@@ -93,7 +93,7 @@ type DBNoItemFound struct {
 	err     error
 }
 
-func (e DBNoItemFound) Error() string {
+func (e *DBNoItemFound) Error() string {
 
 	if e.api == "Scan" {
 		return fmt.Sprintf("No item found during %s operation in %s [%q]", e.api, e.routine, e.pkey)
@@ -105,20 +105,20 @@ func (e DBNoItemFound) Error() string {
 
 }
 
-func (e DBNoItemFound) Unwrap() error {
+func (e *DBNoItemFound) Unwrap() error {
 	return e.err
 }
 
 func NewDBNoItemFound(rt string, pk string, sk string, api string) error {
 
-	e := DBNoItemFound{routine: rt, pkey: pk, sortk: sk, api: api}
+	e := &DBNoItemFound{routine: rt, pkey: pk, sortk: sk, api: api}
 	e.err = NoDataFound
 	return e
 }
 
 func newDBNoItemFound(rt string, pk string, sk string, api string) error {
 
-	e := DBNoItemFound{routine: rt, pkey: pk, sortk: sk, api: api}
+	e := &DBNoItemFound{routine: rt, pkey: pk, sortk: sk, api: api}
 	e.err = NoDataFound
 	logerr(e)
 	return e
@@ -133,19 +133,19 @@ type DBMarshalingErr struct {
 }
 
 func newDBMarshalingErr(rt string, pk string, sk string, api string, err error) error {
-	e := DBMarshalingErr{routine: rt, pkey: pk, sortk: sk, api: api, err: err}
+	e := &DBMarshalingErr{routine: rt, pkey: pk, sortk: sk, api: api, err: err}
 	logerr(e)
 	return e
 }
 
-func (e DBMarshalingErr) Error() string {
+func (e *DBMarshalingErr) Error() string {
 	if len(e.sortk) > 0 {
 		return fmt.Sprintf("Marshalling error during %s in %s. [%q, %q]. Error: ", e.api, e.routine, e.pkey, e.sortk, e.pkey, e.err.Error())
 	}
 	return fmt.Sprintf("Marshalling error during %s in %s. [%q]. Error: ", e.api, e.routine, e.pkey, e.err.Error())
 }
 
-func (e DBMarshalingErr) Unwrap() error {
+func (e *DBMarshalingErr) Unwrap() error {
 	return e.err
 }
 
@@ -158,18 +158,18 @@ type DBUnmarshalErr struct {
 }
 
 func newDBUnmarshalErr(rt string, pk string, sk string, api string, err error) error {
-	e := DBUnmarshalErr{routine: rt, pkey: pk, sortk: sk, api: api, err: err}
+	e := &DBUnmarshalErr{routine: rt, pkey: pk, sortk: sk, api: api, err: err}
 	logerr(e)
 	return e
 }
 
-func (e DBUnmarshalErr) Error() string {
+func (e *DBUnmarshalErr) Error() string {
 	if len(e.sortk) > 0 {
 		return fmt.Sprintf("Unmarshalling error during %s in %s. [%q, %q]. Error: %s ", e.api, e.routine, e.pkey, e.sortk, e.err.Error())
 	}
 	return fmt.Sprintf("Unmarshalling error during %s in %s. [%q]. Error: %s ", e.api, e.routine, e.pkey, e.err.Error())
 }
 
-func (e DBUnmarshalErr) Unwrap() error {
+func (e *DBUnmarshalErr) Unwrap() error {
 	return e.err
 }

@@ -118,8 +118,9 @@ func PowerOn(ctx context.Context, wps *sync.WaitGroup, wgEnd *sync.WaitGroup) {
 			case DBFetch:
 
 				var v *Fetch
+
 				if f, ok := s.Value.(*Fetch); !ok {
-					panic(fmt.Errorf("Monitor Error: DBFetch has wrong payload type. Should be DBFetcHT"))
+					panic(fmt.Errorf("Monitor Error: DBFetch has wrong payload type. Should be type monitor.Fetch"))
 				} else {
 					if stats[s.Id] == nil {
 						v = &Fetch{}

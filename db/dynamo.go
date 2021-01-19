@@ -183,8 +183,8 @@ func FetchNode(uid util.UID, subKey ...string) (blk.NodeBlock, error) {
 
 func FetchNodeItem(uid util.UID, sortk string) (blk.NodeBlock, error) {
 
-	stat := mon.Stat{Id: mon.DBFetch}
-	mon.StatCh <- stat
+	// stat := mon.Stat{Id: mon.DBFetch}
+	// mon.StatCh <- stat
 
 	// proj := expression.NamesList(expression.Name("SortK"), expression.Name("Nd"), expression.Name("XF"), expression.Name("Id"))
 	// expr, err := expression.NewBuilder().WithProjection(proj).Build()
@@ -211,6 +211,7 @@ func FetchNodeItem(uid util.UID, sortk string) (blk.NodeBlock, error) {
 	t0 := time.Now()
 	result, err := dynSrv.GetItem(input)
 	t1 := time.Now()
+	dur := t1.Sub(t0)
 	if err != nil {
 		return nil, newDBSysErr("FetchNodeItem", "GetItem", err)
 	}
@@ -227,6 +228,11 @@ func FetchNodeItem(uid util.UID, sortk string) (blk.NodeBlock, error) {
 	}
 	nb := make(blk.NodeBlock, 1, 1)
 	nb[0] = &di
+
+	v := mon.Fetch{CapacityUnits: *result.ConsumedCapacity.CapacityUnits, Items: len(result.Item), Duration: dur}
+	stat := mon.Stat{Id: mon.DBFetch, Value: &v}
+	mon.StatCh <- stat
+
 	return nb, nil
 	//
 }

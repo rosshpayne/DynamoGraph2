@@ -105,7 +105,7 @@ func ScanForDPitems(attr AttrName, dpCh chan<- DataT) {
 		syslog(fmt.Sprintf("ScanForDPitems:consumed capacity for Query index P_S, %s.  ItemCount %d  Duration: %s ", result.ConsumedCapacity, len(result.Items), t1.Sub(t0)))
 		//
 		if int(*result.Count) == 0 {
-			panic(newDBNoItemFound("ScanForDPitems", attr, "", "Query")) //TODO add lv
+			break
 		}
 		//
 		dpresult := make([]DPResult, len(result.Items))
