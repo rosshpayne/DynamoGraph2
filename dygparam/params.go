@@ -6,7 +6,7 @@ const (
 	DebugOn = true
 	//SysDebugOn = false
 
-	TypesTable = "DyGTypes2"
+	TypesTable = "GoGraphSS"
 	//
 	// Parameters for:  Overflow Blocks - overflow blocks belong to a parent node. It is where the child UIDs and propagated scalar data is stored.
 	//                  The overflow block is know as the target of propagation. Each overflow block is identifier by its own UUID.

@@ -20,8 +20,8 @@ const (
 )
 
 type tyNames struct {
-	ShortNm string `json:"Atr"`
-	LongNm  string
+	ShortNm string `json:"SortK"`
+	LongNm  string `json:"Name"`
 }
 
 var (
@@ -65,6 +65,7 @@ func SetGraph(graph_ string) {
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("short Names: ", tynames)
 	//
 	// populate type short name cache. This cache is conccurent safe as it is readonly from now on.
 	//
@@ -84,8 +85,8 @@ func GetTypeShortNames() ([]tyNames, error) {
 
 func LoadDataDictionary() (blk.TyIBlock, error) {
 
-	//filt := expression.BeginsWith(expression.Name("Nm"), "#").Not()
-	filt := expression.BeginsWith(expression.Name("Nm"), gId)
+	//filt := expression.BeginsWith(expression.Name("PKey"), "#").Not()
+	filt := expression.BeginsWith(expression.Name("PKey"), gId)
 	expr, err := expression.NewBuilder().WithFilter(filt).Build()
 	if err != nil {
 		return nil, newDBExprErr("LoadDataDictionary", "", "", err)
@@ -117,7 +118,6 @@ func LoadDataDictionary() (blk.TyIBlock, error) {
 		//func newDBUnmarshalErr(rt string, pk string, sk string, api string, err error) error {
 		return nil, newDBUnmarshalErr("UnmarshalListOfMaps", "", "", "UnmarshalListOfMaps", err)
 	}
-
 	return dd, nil
 
 }
@@ -125,7 +125,7 @@ func LoadDataDictionary() (blk.TyIBlock, error) {
 func loadTypeShortNames() ([]tyNames, error) {
 
 	syslog("db.loadTypeShortNames ")
-	keyC := expression.KeyEqual(expression.Key("Nm"), expression.Value("#"+gId+"T"))
+	keyC := expression.KeyEqual(expression.Key("PKey"), expression.Value("#"+gId+"T"))
 	expr, err := expression.NewBuilder().WithKeyCondition(keyC).Build()
 	if err != nil {
 		return nil, newDBExprErr("loadTypeShortNames", "", "", err)
@@ -163,13 +163,13 @@ func loadTypeShortNames() ([]tyNames, error) {
 func getGraphId(graphNm string) (string, error) {
 
 	type graphMeta struct {
-		Id string `json:"Atr"`
+		Id string `json:"SortK"`
 	}
 
 	syslog("db.getGraphId ")
-	keyC := expression.KeyEqual(expression.Key("Nm"), expression.Value("#Graph"))
-	filt := expression.BeginsWith(expression.Name("Lnm"), graphNm)
-	proj := expression.NamesList(expression.Name("Atr"))
+	keyC := expression.KeyEqual(expression.Key("PKey"), expression.Value("#Graph"))
+	filt := expression.BeginsWith(expression.Name("Name"), graphNm)
+	proj := expression.NamesList(expression.Name("SortK"))
 	expr, err := expression.NewBuilder().WithFilter(filt).WithProjection(proj).WithKeyCondition(keyC).Build()
 	if err != nil {
 		return "", newDBExprErr("getGraphId", "", "", err)

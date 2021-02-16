@@ -3,6 +3,7 @@ package cache
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	blk "github.com/DynamoGraph/block"
 	"github.com/DynamoGraph/db"
@@ -318,6 +319,68 @@ func (g *GraphCache) FetchNode(uid util.UID, sortk ...string) (*NodeCache, error
 
 	e.Unlock()
 	return e.NodeCache, nil
+}
+
+func (g *GraphCache) FetchUOB(uid util.UID, wg *sync.WaitGroup, ncCh chan<- *NodeCache) {
+	var sortk_ string
+
+	g.Lock()
+
+	sortk_ = "A#"
+
+	uids := uid.String()
+	e := g.cache[uids]
+
+	if e == nil {
+		e = &entry{ready: make(chan struct{})}
+		g.cache[uids] = e
+		g.Unlock()
+		// nb: type blk.NodeBlock []*DataIte
+		nb, err := db.FetchNode(uid, sortk_)
+		if err != nil {
+			return
+		}
+		e.NodeCache = &NodeCache{m: make(map[SortKey]*blk.DataItem), gc: g}
+		en := e.NodeCache
+		en.Uid = uid
+		for _, v := range nb {
+			en.m[v.SortK] = v
+		}
+		close(e.ready)
+	} else {
+		g.Unlock()
+		<-e.ready
+	}
+	//
+	// lock node cache.
+	//
+	e.RLock()
+	//e.Lock()
+	// if e.NodeCache == nil {
+	// 	// cache has been cleared. Start again.
+	// 	e = nil
+	// 	g.FetchNode(uid, sortk_)
+	// }
+	e.locked = true // TODO - this cannot be done under a read lock
+	e.ffuEnabled = false
+	var cached bool
+	// check sortk is cached
+	for k := range e.m {
+		if strings.HasPrefix(k, sortk_) {
+			cached = true
+			break
+		}
+	}
+	if !cached {
+		e.Unlock()
+		e.fetchSortK(sortk_)
+		ncCh <- e.NodeCache
+		return
+	}
+
+	e.Unlock()
+
+	ncCh <- e.NodeCache
 }
 
 func (nc *NodeCache) fetchSortK(sortk string) error {

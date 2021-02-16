@@ -120,6 +120,9 @@ func Execute(graph string, query string) *ast.RootStmt {
 	p := parser.New(graph, query)
 	stmt, errs := p.ParseInput()
 	if len(errs) > 0 {
+		for _, v := range errs {
+			fmt.Println("error: ", v)
+		}
 		panic(errs[0])
 	}
 	//

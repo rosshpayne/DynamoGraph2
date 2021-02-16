@@ -631,7 +631,7 @@ func (p *Parser) parseEdge(e *ast.EdgeT, parentEdge ast.SelectI) *Parser {
 		if p.peekToken.Type == token.ATSIGN || p.peekToken.Type == token.LBRACE {
 			// must be a uid-pred - confirm there is a type that exists with this uid-pred
 			if !types.IsUidPred(ident) {
-				p.addErr(fmt.Sprintf("%q is not a uid-predicate", ident))
+				p.addErr(fmt.Sprintf("%q YY is not a uid-predicate", ident))
 			}
 			//
 			uidpred := &ast.UidPred{Parent: parentEdge}
@@ -678,7 +678,7 @@ func (p *Parser) parseEdge(e *ast.EdgeT, parentEdge ast.SelectI) *Parser {
 
 			case token.IDENT:
 				if !types.IsUidPred(p.curToken.Literal) {
-					p.addErr(fmt.Sprintf("%q is not a uid-predicate", p.curToken.Literal))
+					p.addErr(fmt.Sprintf("%q XX is not a uid-predicate", p.curToken.Literal))
 				}
 				//
 				fmt.Printf("COUNT IDENT- create uidPred: %#v\n", p.curToken)

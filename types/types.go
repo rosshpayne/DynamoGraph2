@@ -149,7 +149,7 @@ func populateTyCaches(allTypes blk.TyIBlock) {
 	}
 
 	for k, v := range allTypes {
-		fmt.Println("allTypes: ", k, v)
+		fmt.Printf("allTypes: %d %#v\n", k, v)
 	}
 
 	for ty, _ := range tyMap {
@@ -172,19 +172,15 @@ func populateTyCaches(allTypes blk.TyIBlock) {
 			// scalar type or abstract type e.g [person]
 			//
 			if v.Ty[0] == '[' {
-				// abstract type
-				card := v.Cardinality
-				if len(v.Cardinality) == 0 {
-					card = "1:N"
-				} else {
-					if v.Cardinality != "1:1" && v.Cardinality != "1:N" {
-						panic(fmt.Errorf("Type data error: wrong cardinality value [%s]", v.Cardinality))
-					}
-				}
-				a = blk.TyAttrD{Name: v.Atr, DT: "Nd", C: v.C, Ty: v.Ty[1 : len(v.Ty)-1], P: v.P, Pg: v.Pg, N: v.N, IncP: v.IncP, Ix: v.Ix, Card: card}
+				a = blk.TyAttrD{Name: v.Atr, DT: "Nd", C: v.C, Ty: v.Ty[1 : len(v.Ty)-1], P: v.P, Pg: v.Pg, N: v.N, IncP: v.IncP, Ix: v.Ix, Card: "1:N"}
 			} else {
-				// scalar
-				a = blk.TyAttrD{Name: v.Atr, DT: v.Ty, C: v.C, P: v.P, N: v.N, Pg: v.Pg, IncP: v.IncP, Ix: v.Ix}
+				// check if Ty is a known Type
+				if _, ok := tyMap[v.Ty]; ok {
+					a = blk.TyAttrD{Name: v.Atr, DT: "Nd", C: v.C, Ty: v.Ty, P: v.P, Pg: v.Pg, N: v.N, IncP: v.IncP, Ix: v.Ix, Card: "1:1"}
+				} else {
+					// scalar
+					a = blk.TyAttrD{Name: v.Atr, DT: v.Ty, C: v.C, P: v.P, N: v.N, Pg: v.Pg, IncP: v.IncP, Ix: v.Ix}
+				}
 			}
 			tc = append(tc, a)
 			//
@@ -214,9 +210,7 @@ func populateTyCaches(allTypes blk.TyIBlock) {
 	if param.DebugOn {
 		fmt.Println("==== TypeC.AttrTy")
 		for k, v := range TypeC.AttrTy {
-			for _, v2 := range v {
-				fmt.Printf("%s       %c\n", k, v2)
-			}
+			fmt.Printf("%s   shortName: %s\n", k, v)
 		}
 		fmt.Println("\n==== TypeC.TyC")
 		for k, v := range TypeC.TyC {
@@ -277,7 +271,7 @@ func IsUidPred(pred string) bool { //TODO: pass in Type so uid-pred is checked a
 
 	for _, v := range TypeC.TyC {
 		for _, vv := range v {
-			if vv.Name == pred && len(vv.Ty) > 0 {
+			if vv.Name == pred && len(vv.Ty) > 0 && vv.DT == "Nd" {
 				// is a uid-pred in one type so presume its ok
 				return true
 			}

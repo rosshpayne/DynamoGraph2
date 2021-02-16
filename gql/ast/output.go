@@ -68,7 +68,6 @@ func (r *RootStmt) MarshalJSON() string {
 						spred = append(spred, v)
 					}
 				}
-				//
 				// get child uids that belong to edge x and print out the scalar attributes for x (see AAA)
 				//
 				var s strings.Builder
@@ -91,7 +90,11 @@ func (r *RootStmt) MarshalJSON() string {
 						// s.WriteString(fmt.Sprintf("%sidx: { i: %d, j: %d }\n", strings.Repeat("\t", 2), i, j))
 						// s.WriteString(fmt.Sprintf("%suid: %s\n", strings.Repeat("\t", 2), util.UID(v).String()))
 						for _, scalar := range spred {
-
+							// check if uid-pred
+							if strings.Count(scalar.Name, ":") > 1 { // actor.performance:performance.character:
+								// ignore it's not scalar
+								continue
+							}
 							pred := scalar.Name[strings.Index(scalar.Name, ":")+1:] // Friends:Age -> Age
 
 							switch z := scalar.Value.(type) {

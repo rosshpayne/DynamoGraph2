@@ -1,45 +1,45 @@
 {
-   "DyGTypes2":  [
+   "GoGraphSS":  [
       {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "#Scalar" }, 
-            	    "Atr" : { "S" : "B" }
+                	"PKey"  : {"S": "#Scalar" }, 
+            	    "SortK" : { "S" : "B" }
                   }} 
       },
        {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "#Scalar" }, 
-            	    "Atr" : { "S" : "Bl" }
+                	"PKey"  : {"S": "#Scalar" }, 
+            	    "SortK" : { "S" : "Bl" }
                   }} 
       },
             {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "#Scalar" }, 
-            	    "Atr" : { "S" : "DT" }
+                	"PKey"  : {"S": "#Scalar" }, 
+            	    "SortK" : { "S" : "DT" }
                   }} 
       },
             {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "#Scalar" }, 
-            	    "Atr" : { "S" : "F" }
+                	"PKey"  : {"S": "#Scalar" }, 
+            	    "SortK" : { "S" : "F" }
                   }} 
       },
             {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "#Scalar" }, 
-            	    "Atr" : { "S" : "I" }
+                	"PKey"  : {"S": "#Scalar" }, 
+            	    "SortK" : { "S" : "I" }
                   }} 
       },
             {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "#Scalar" }, 
-            	    "Atr" : { "S" : "S" }
+                	"PKey"  : {"S": "#Scalar" }, 
+            	    "SortK" : { "S" : "S" }
                   }} 
       }
      ]

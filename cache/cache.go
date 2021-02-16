@@ -16,6 +16,8 @@ import (
 	slog "github.com/DynamoGraph/syslog"
 	"github.com/DynamoGraph/types"
 	"github.com/DynamoGraph/util"
+
+	"github.com/DynamoGraph/rdf/grmgr"
 )
 
 func syslog(s string) {
@@ -468,7 +470,7 @@ func (nc *NodeCache) UnmarshalNodeCache(nv ds.ClientNV, ty_ ...string) error {
 		var s strings.Builder
 		s.WriteString(key)
 		s.WriteByte('#')
-		s.WriteString(strconv.Itoa(i))
+		s.WriteString(strconv.Itoa(i)) // batch Id 1..n
 		return s.String()
 	}
 	// &ds.NV{Name: "Age"},
@@ -690,13 +692,21 @@ func (nc *NodeCache) UnmarshalNodeCache(nv ds.ClientNV, ty_ ...string) error {
 				a.OfUIDs = OfUIDs
 
 			case "Nd": // uid-pred cUID+XF data
-				var allcuid [][][]byte
-				var xfall [][]int
+				var (
+					allcuid [][][]byte
+					xfall   [][]int
+					//
+					wg      sync.WaitGroup
+					ncCh    chan *NodeCache
+					limiter *grmgr.Limiter
+				)
 
 				cuid, xf, ofuids := v.GetNd()
 				// share ofuids amoungst all propgatated data types
 				if len(ofuids) > 0 {
 					OfUIDs = ofuids[1:] // ignore dummy entry: TODO: check this is appropriate??
+					// setup concurrent reads of UUID batches
+					limiter = grmgr.New("Of", 6)
 				} else {
 					OfUIDs = ofuids
 				}
@@ -704,23 +714,42 @@ func (nc *NodeCache) UnmarshalNodeCache(nv ds.ClientNV, ty_ ...string) error {
 				xfall = append(xfall, xf[1:])       // ignore dummy entry
 
 				// data from overflow blocks
-				for _, v := range OfUIDs {
+				if len(OfUIDs) > 0 {
 
-					nuid, err := nc.gc.FetchNode(util.UID(v))
-					if err != nil {
-						return err
-					}
-					for i := 1; true; i++ {
-						if di, ok := nuid.m[sortK(attrKey, i)]; !ok {
-							break //return fmt.Errorf("UnmarshalCache: SortK %q does not exist in cache", attrKey)
-						} else {
-							uof, xof := di.GetOfNd()
-							// check if target item is populated. Note: #G#:S#1 will always contain atleast one cUID but #G#:S#2 may not contain any.
-							// this occurs as UID item target is created as item id is incremented but associated scalar data target items are created on demand.
-							// so a UID target item may exist without any associated scalar data targets. Each scalar data target items will always contain data associated with each cUID attached to parent.
-							if len(uof) > 0 {
-								allcuid = append(allcuid, uof[1:]) // ignore first entry
-								xfall = append(xfall, xof[1:])     // ignore first entry
+					// read overflow blocks concurrently
+					go func() {
+
+						for _, v := range OfUIDs {
+
+							limiter.Ask()
+							<-limiter.RespCh()
+
+							wg.Add(1)
+							go nc.gc.FetchUOB(util.UID(v), &wg, ncCh)
+
+						}
+						wg.Wait()
+						close(ncCh) // End-of-UOBs
+					}()
+
+					// read child node UUIDs from channel
+					for nuid := range ncCh {
+
+						if err != nil {
+							return err
+						}
+						for i := 1; true; i++ {
+							if di, ok := nuid.m[sortK(attrKey, i)]; !ok {
+								break // no more UUID batches
+							} else {
+								uof, xof := di.GetOfNd()
+								// check if target item is populated. Note: #G#:S#1 will always contain atleast one cUID but #G#:S#2 may not contain any.
+								// this occurs as UID item target is created as item id is incremented but associated scalar data target items are created on demand.
+								// so a UID target item may exist without any associated scalar data targets. Each scalar data target items will always contain data associated with each cUID attached to parent.
+								if len(uof) > 0 {
+									allcuid = append(allcuid, uof[1:]) // ignore first entry
+									xfall = append(xfall, xof[1:])     // ignore first entry
+								}
 							}
 						}
 					}

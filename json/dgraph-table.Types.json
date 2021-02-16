@@ -2,22 +2,22 @@
 {
     "AttributeDefinitions": [
         {
-            "AttributeName": "Nm", 
+            "AttributeName": "PKey", 
             "AttributeType": "S"
         },
         {
-            "AttributeName": "Atr", 
+            "AttributeName": "SortK", 
             "AttributeType": "S"
         }
     ], 
-    "TableName": "DyGTypes2", 
+    "TableName": "GoGraphSS", 
     "KeySchema": [
         {
-            "AttributeName": "Nm", 
+            "AttributeName": "PKey", 
             "KeyType": "HASH"
         },
         {
-            "AttributeName": "Atr", 
+            "AttributeName": "SortK", 
             "KeyType": "RANGE"
         }
     ],
@@ -26,14 +26,14 @@
                 "WriteCapacityUnits": 3
     },
     "GlobalSecondaryIndexes": [
-        { "IndexName": "Atr-Nm-index", 
+        { "IndexName": "SK-PK-index", 
             "KeySchema": [
                 {
-                    "AttributeName": "Atr", 
+                    "AttributeName": "SortK", 
                     "KeyType": "HASH"
                 },
                 {
-                    "AttributeName": "Nm", 
+                    "AttributeName": "PKey", 
                     "KeyType": "RANGE"
                 }
             ], 

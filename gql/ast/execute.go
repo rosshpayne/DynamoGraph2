@@ -69,31 +69,31 @@ func (r *RootStmt) filterRootResult(grl *grmgr.Limiter, wg *sync.WaitGroup, resu
 	// query->cache->unmarshal(nv)
 	//
 	nvc := r.genNV(result.tyS)
-	fmt.Println("==== Root genNV_ =====")
-	for _, n := range nvc {
-		fmt.Println("Root genNV__: ", n.Name, n.Ignore)
-	}
+	//xxfmt.Println("==== Root genNV_ =====")
+	// for _, n := range nvc {
+	// 	//xxfmt.Println("Root genNV__: ", n.Name, n.Ignore)
+	// }
 	//
 	// generate sortk - determines extent of node data to be loaded into cache. Tries to keep it as norrow (specific) as possible.
 	//
 	sortkS := cache.GenSortK(nvc, result.tyS)
-	for _, s := range sortkS {
-		fmt.Println("Ysortk: ", s)
-	}
+	// for _, s := range sortkS {
+	// 	//xxfmt.Println("Ysortk: ", s)
+	// }
 	//
 	// fetch data - with optimised fetch - perform queries sequentially becuase of mutex lock on node map
 	//
 	gc := cache.GetCache()
 	for _, sortk := range sortkS {
-		//	fmt.Println("filterRoot - FetchNodeNonCache for : ", result.uid, sortk)
+		//	//xxfmt.Println("filterRoot - FetchNodeNonCache for : ", result.uid, sortk)
 		stat := mon.Stat{Id: mon.NodeFetch}
 		mon.StatCh <- stat
 
 		nc, _ = gc.FetchNodeNonCache(result.uid, sortk)
 	}
-	for k, _ := range nc.GetMap() {
-		fmt.Println("GetMap sortk: ", k)
-	}
+	// for k, _ := range nc.GetMap() {
+	// 	//xxfmt.Println("GetMap sortk: ", k)
+	// }
 	//
 	// assign cached data to NV
 	//
@@ -241,19 +241,19 @@ func (u *UidPred) execNode(grl *grmgr.Limiter, wg *sync.WaitGroup, uid_ util.UID
 		// as the data is sourced from u-parent so must the NV listing. Only interested in the uid-preds and its scalar types, as this includes the data for u (and its uid-pred siblings)
 		//
 		nvc = u.Parent.genNV(ty)
-		fmt.Println("===== XgenNV ======")
-		for _, n := range nvc {
-			fmt.Println("XgenNV: ", n.Name)
-		}
+		//xxfmt.Println("===== XgenNV ======")
+		// for _, n := range nvc {
+		// 	//xxfmt.Println("XgenNV: ", n.Name)
+		// }
 		//
 		// generate sortk - source from node type and NV - merge of two.
 		//                  determines extent of node data to be loaded into cache. Tries to keep it as norrow (specific) as possible to minimise RCUs.
 		//                  ty is the type of the parent uid-pred (uid passed in)
 		//
 		sortkS := cache.GenSortK(nvc, ty)
-		for _, s := range sortkS {
-			fmt.Println("Xsortk: ", s)
-		}
+		// for _, s := range sortkS {
+		// 	//xxfmt.Println("Xsortk: ", s)
+		// }
 		//
 		switch uty.Card {
 
@@ -264,7 +264,7 @@ func (u *UidPred) execNode(grl *grmgr.Limiter, wg *sync.WaitGroup, uid_ util.UID
 			for _, sortk := range sortkS {
 				stat := mon.Stat{Id: mon.NodeFetch}
 				mon.StatCh <- stat
-				fmt.Println(">>> FetchNode: for uty ", uty)
+				//xxfmt.Println(">>> FetchNode: for uty ", uty)
 				nc, _ = gc.FetchNodeNonCache(uid_, sortk) // BBB
 			}
 			//
@@ -293,7 +293,7 @@ func (u *UidPred) execNode(grl *grmgr.Limiter, wg *sync.WaitGroup, uid_ util.UID
 			case *RootStmt:
 				_, nvc_, ok = x.getData(ruid.String())
 			}
-			fmt.Println("assign from ", sortk_+"#G#:"+uty.C)
+			//xxfmt.Println("assign from ", sortk_+"#G#:"+uty.C)
 			//
 			// load data from nvm_, nvc_ in parent
 			// note: there is a one to one correspondence in valudes between list type
@@ -307,7 +307,7 @@ func (u *UidPred) execNode(grl *grmgr.Limiter, wg *sync.WaitGroup, uid_ util.UID
 						case ':': // uid-pred
 							// search for uid
 							// idx entry
-							fmt.Println("v.Name = ", v.Name, n.Name)
+							//xxfmt.Println("v.Name = ", v.Name, n.Name)
 							uids := v.Value.([][][]byte)
 							uu := make([][]byte, 1, 1)
 							uuu := make([][][]byte, 1, 1)
@@ -364,13 +364,13 @@ func (u *UidPred) execNode(grl *grmgr.Limiter, wg *sync.WaitGroup, uid_ util.UID
 				idx index
 			)
 
-			// fmt.Println("uty+x.Name()  ", p, u.Name(), u.Name())
+			// //xxfmt.Println("uty+x.Name()  ", p, u.Name(), u.Name())
 			// // get type of the uid-pred
 			// if aty, ok = types.TypeC.TyAttrC[uty.Ty+":"+x.Name()]; !ok {
 			// 	panic(fmt.Errorf("%s.%s not exists", uty, x.Name()))
 			// 	continue // ignore this attribute as it is not in current type
 			// }
-			// fmt.Println("aty.Ty : ", aty.Ty)
+			// //xxfmt.Println("aty.Ty : ", aty.Ty)
 			// results not in nv for this depth in graph. Must query uids stored in nv[i].Value -> [][][]byte
 			data, ok := nvm[u.Name()+":"]
 			if !ok {

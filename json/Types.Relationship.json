@@ -1,26 +1,26 @@
 {
-   "DyGTypes2":  [
+   "GoGraphSS":  [
       {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "#Graph" }, 
-            	    "Atr" : { "S" : "r" },
-            	    "Lnm" : { "S": "Relationship" }
+                	"PKey"  : {"S": "#Graph" }, 
+            	    "SortK" : { "S" : "r" },
+            	    "Name" : { "S": "Relationship" }
                   }} 
       },
             {    
           "PutRequest" : {
           "Item" : {
-               	"Nm"  : {"S": "#r.T" }, 
-            	    "Atr" : { "S" : "Pn" },
-            	    "LongNm" : { "S": "Person" }
+               	"PKey"  : {"S": "#r.T" }, 
+            	    "SortK" : { "S" : "Pn" },
+            	    "Name" : { "S": "Person" }
                   }} 
       },
       {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "r.Person" }, 
-            	    "Atr" : { "S" : "Name" },
+                	"PKey"  : {"S": "r.Person" }, 
+            	    "SortK" : { "S" : "Name" },
             	    "Ty" : { "S": "S" },
             	    "F" : { "SS" : ["Changed#Bl#C"] },
                     "C" : { "S": "N" },
@@ -33,8 +33,8 @@
      {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "r.Person" }, 
-            	    "Atr" : { "S" : "Age" },
+                	"PKey"  : {"S": "r.Person" }, 
+            	    "SortK" : { "S" : "Age" },
             	    "Ty" : { "S": "I" },
             	    "F" : { "SS" : ["HealthStatus#F#H","HasDoctor#Bl#D"]},
             	    "C" : { "S": "A" },
@@ -46,8 +46,8 @@
           {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "r.Person" }, 
-            	    "Atr" : { "S" : "Comment" },
+                	"PKey"  : {"S": "r.Person" }, 
+            	    "SortK" : { "S" : "Comment" },
             	    "Ty" : { "S": "S" },
             	    "C" : { "S": "Ct" },
             	    "P" : { "S" : "A" },
@@ -59,8 +59,8 @@
      {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "r.Person" }, 
-            	    "Atr" : { "S" : "Cars" },
+                	"PKey"  : {"S": "r.Person" }, 
+            	    "SortK" : { "S" : "Cars" },
             	    "Ty" : { "S": "SS" },
             	    "C" : { "S": "C" },
             	    "P" : { "S" : "A" },
@@ -71,8 +71,8 @@
      {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "r.Person" }, 
-            	    "Atr" : { "S" : "Jobs" },
+                	"PKey"  : {"S": "r.Person" }, 
+            	    "SortK" : { "S" : "Jobs" },
             	    "Ty" : { "S": "LS" },
             	    "C" : { "S": "J" },
             	    "P" : { "S" : "A" },
@@ -82,8 +82,8 @@
           {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "r.Person" }, 
-            	    "Atr" : { "S" : "SalaryLast3Year" },
+                	"PKey"  : {"S": "r.Person" }, 
+            	    "SortK" : { "S" : "SalaryLast3Year" },
             	    "Ty" : { "S": "SI" },
             	    "C" : { "S": "SLY" },
             	    "P" : { "S" : "A" },
@@ -94,8 +94,8 @@
       {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "r.Person" }, 
-            	    "Atr" : { "S" : "DOB" },
+                	"PKey"  : {"S": "r.Person" }, 
+            	    "SortK" : { "S" : "DOB" },
             	    "Ty" : { "S": "S" },
             	    "C" : { "S": "D" },
             	    "P" : { "S" : "A" },
@@ -106,8 +106,8 @@
      {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "r.Person" }, 
-            	    "Atr" : { "S" : "Siblings" },
+                	"PKey"  : {"S": "r.Person" }, 
+            	    "SortK" : { "S" : "Siblings" },
             	    "Ty" : { "S": "[Person]" },
             	    "C" : { "S": "S" },
             	    "P" : { "S" : "A" },
@@ -118,8 +118,8 @@
      {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "r.Person" }, 
-            	    "Atr" : { "S" : "Friends" },
+                	"PKey"  : {"S": "r.Person" }, 
+            	    "SortK" : { "S" : "Friends" },
             	    "Ty" : { "S": "[Person]" },
             	    "N" : {"BOOL":true},
             	    "C" : { "S": "F" },
@@ -130,8 +130,8 @@
      {    
           "PutRequest" : {
           "Item" : {
-                	"Nm"  : {"S": "r.Person" }, 
-            	    "Atr" : { "S" : "Address" },
+                	"PKey"  : {"S": "r.Person" }, 
+            	    "SortK" : { "S" : "Address" },
             	    "Ty" : { "S": "S" },
             	    "C" : { "S": "E" },
             	    "P" : { "S" : "A" },
