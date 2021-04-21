@@ -32,7 +32,7 @@ type NV struct {
 
 type ClientNV []*NV
 
-type NVmap map[string]*NV
+type NVmap map[string]*NV // string is a Node UUID?
 
 func (c ClientNV) MarshalJSON() {
 

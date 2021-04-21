@@ -144,7 +144,7 @@ func FetchNode(uid util.UID, subKey ...string) (blk.NodeBlock, error) {
 		ExpressionAttributeNames:  expr.Names(),
 		ExpressionAttributeValues: expr.Values(),
 	}
-	input = input.SetTableName(param.GraphTable).SetReturnConsumedCapacity("TOTAL").SetConsistentRead(false)
+	input = input.SetTableName(param.GraphTable).SetReturnConsumedCapacity("TOTAL").SetConsistentRead(true)
 	//
 	// Query
 	//

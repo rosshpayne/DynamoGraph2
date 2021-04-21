@@ -184,12 +184,12 @@ func TestMovie1e(t *testing.T) {
 
 }
 
-func TestMovie1f(t *testing.T) {
+func TestMovie1g(t *testing.T) {
 
 	input := `{
-  me(func: eq(count(film.genre), 13)) {
+  me(func: eq(count(film.genre), 13))  {
     title
-    film.genre {
+    film.genre  @filter( anyofterms(name, "Musical comedy" )) {
     	name
     }
     film.director {
@@ -198,8 +198,8 @@ func TestMovie1f(t *testing.T) {
   }
 }`
 
-	expectedTouchLvl = []int{6, 84}
-	expectedTouchNodes = 90
+	expectedTouchLvl = []int{6, 20}
+	expectedTouchNodes = 26
 
 	stmt := Execute("Movies", input)
 	t.Log(stmt.String())
@@ -207,7 +207,6 @@ func TestMovie1f(t *testing.T) {
 	t.Log(stmt.String())
 
 	validate(t, result)
-
 }
 
 func TestMoviePS0(t *testing.T) {
@@ -455,7 +454,7 @@ func TestMoviePS3e(t *testing.T) {
 func TestMovieFilms(t *testing.T) {
 
 	input := `{
-  Mackenzie(func:allofterms(name, "Mackenzie Crook")) {
+  Mackenzie(func:allofterms(name, "crook mackenzie")) {
     name
     actor.performance {
       performance.film {

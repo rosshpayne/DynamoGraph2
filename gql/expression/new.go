@@ -60,6 +60,7 @@ func New(input string) *Expression {
 	)
 
 	pushState := func() {
+
 		s := state{opr: opr}
 		lp = append(lp, s)
 	}
@@ -96,7 +97,7 @@ func New(input string) *Expression {
 		//
 		tok = p.curToken
 		p.nextToken()
-		fmt.Printf("\ntoken: %#v peekToken: %#v\n", tok, p.curToken)
+		//fmt.Printf("\n\n >>> Loop token: \ntok  %#v \n peekToken: %#v\n", tok, p.curToken)
 
 		switch tok.Type {
 		case token.EOF:
@@ -140,17 +141,17 @@ func New(input string) *Expression {
 			} else {
 				e = e.extendRight(en)
 			}
-
+			fmt.Printf("e: %#v", *e)
 			extendRight = true
 			operandL = true
 
 		case token.RPAREN:
 
 			popState()
-			fmt.Println("RPAREN: %s", e.opr)
+
 			// navigate current Expression e, up to next LPARAM Expression
 			for e = e.parent; e.parent != nil && e.opr != "-"; e = e.parent {
-				fmt.Println("xRPAREN: %s", e.opr)
+				fmt.Printf("xRPAREN: %s\n", e.opr)
 			}
 
 			if e.parent != nil && e.parent.opr != "-" {
@@ -165,11 +166,11 @@ func New(input string) *Expression {
 		case token.FUNC:
 
 			d := &FilterFunc{}
-			fmt.Printf("token.FUNC d: %#v %#v\n", d, tok)
+			//	fmt.Printf(" >>>> token.FUNC d: %#v   tok: %#v\n", d, tok)
 			p.ParseFunction(d, tok)
 
 			//	for ;p.curToken.Type != token.LBRACE; p.curToken.nextToken(){}
-			fmt.Printf("back to input parser: tok: %#v,  peekToken: %#v opr: %s\n", tok, p.curToken, opr)
+			//fmt.Printf("************.  back to input parser: \ntok: %#v,  \npeekToken: %#v   \nopr: %s\n", tok, p.curToken, opr)
 
 			//
 			// look ahead to next operator and check for higher precedence operation
@@ -208,16 +209,15 @@ func New(input string) *Expression {
 
 			if operandL {
 
-				fmt.Println("loperand = d ...............")
+				//fmt.Printf("*** loperand = %#v  \nfunc: %#v\n", d, *d.gqlFunc)
 				loperand = d
 				operandL = false
 
 			} else {
 
 				roperand = d
-				fmt.Println("here 5")
 				if loperand != nil {
-					fmt.Println("here 6")
+
 					en, opr = makeExpr(loperand, opr, roperand)
 					if e == nil {
 						e, en = en, nil
@@ -226,7 +226,7 @@ func New(input string) *Expression {
 					}
 
 				} else {
-					fmt.Println("here 7")
+
 					en, opr = makeExpr(nil, opr, roperand)
 
 					if extendRight {
@@ -243,7 +243,6 @@ func New(input string) *Expression {
 
 		case token.OR, token.AND:
 
-			fmt.Println("**** Token: ", tok.Type)
 			opr = tok.Type
 
 		case token.NOT:
@@ -282,11 +281,11 @@ func New(input string) *Expression {
 	if e == nil {
 		// not boolean expression just a bool - create a dummy expression
 		e, _ = makeExpr(loperand, token.NOOP, &FilterFunc{value: true})
-		fmt.Printf("Dummy expression  %#v\n", e)
+		//fmt.Printf("Dummy expression  %#v\n", e)
 		return e
 
 	}
-	x := findRoot(e)
-	fmt.Printf("Root %#v\n", x)
+	findRoot(e)
+	//fmt.Printf("Root %#v\n", x)
 	return findRoot(e)
 }

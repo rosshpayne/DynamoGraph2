@@ -275,6 +275,7 @@ func TestRootQueryAnyPlusFilter2(t *testing.T) {
 	t.Log(stmt.String())
 
 	validate(t, result)
+	//Shutdown()
 }
 
 func TestRootQueryAnyPlusFilter3(t *testing.T) {
@@ -347,7 +348,7 @@ func TestRootQuery1f(t *testing.T) {
 	t.Log(stmt.String())
 
 	validate(t, result)
-
+	//Shutdown()
 }
 
 func TestRootFilter1(t *testing.T) {
@@ -531,13 +532,47 @@ func TestUPredFilter3c(t *testing.T) {
 	validate(t, result)
 }
 
-func TestUPredFilter4a(t *testing.T) {
+func TestUPredFilter4aa(t *testing.T) {
+
+	input := `{
+  directors(func: eq(count(Siblings), 2) ){
+    Age
+    Name
+    Friends @filter(gt(Age,62) or le(Age,40) or eq(Name,"Ross Payne")) {
+      Age
+      Name
+      Comment
+      Friends   {
+    	  Name
+    	  Age
+	   }
+     Siblings {
+    		Age
+    		Name
+    		Comment
+	  }
+  }
+}
+}`
+
+	expectedTouchLvl = []int{3, 6, 26}
+	expectedTouchNodes = 35
+
+	stmt := Execute("Relationship", input)
+	result := stmt.MarshalJSON()
+	t.Log(stmt.String())
+
+	validate(t, result)
+
+}
+
+func TestUPredFilter4ab(t *testing.T) {
 
 	input := `{
   directors(func: eq(count(Siblings), 2) ) {
     Age
     Name
-    Friends @filter(gt(Age,62) or le(Age,40) or eq(Name,"Ross Payne")) {
+    Friends @filter( (le(Age,40) or eq(Name,"Ian Payne")) and ge(Age,62)    ) {
       Age
     	Name
     	Comment
@@ -553,16 +588,298 @@ func TestUPredFilter4a(t *testing.T) {
   }
 }
 }`
+	expectedJSON = `{
+        data: [
+                {
+                Age : 62,
+                Name : "Ross Payne",
+                Friends : [ 
+                        { 
+                        Age: 67,
+                        Name: "Ian Payne",
+                        Comment: "One of the best cab rides I have Payne seen to date! Anyone know how fast the train was going around 20 mins in?",
+                        Friends : [ 
+                                { 
+                                Name: "Phil Smith",
+                                Age: 36,
+                                },
+                                { 
+                                Name: "Ross Payne",
+                                Age: 62,
+                                },
+                                { 
+                                Name: "Paul Payne",
+                                Age: 58,
+                                },
+                        ],
+                        Siblings : [ 
+                                { 
+                                Age: 58,
+                                Name: "Paul Payne",
+                                Comment: "A foggy snowy morning lit with Smith sodium lamps is an absolute dream",
+                                },
+                                { 
+                                Age: 62,
+                                Name: "Ross Payne",
+                                Comment: "Another fun  video. Loved it my Payne Grandmother was from Passau. Dad was over in Germany but there was something going on over there at the time we won't discuss right now. Thanks for posting it. Have a great weekend everyone.",
+                                },
+                        ]
+                        }
+                ]
+                }, 
+                {
+                Age : 67,
+                Name : "Ian Payne",
+                Friends : [ 
+                ]
+                }, 
+                {
+                Age : 58,
+                Name : "Paul Payne",
+                Friends : [ 
+                        { 
+                        Age: 67,
+                        Name: "Ian Payne",
+                        Comment: "One of the best cab rides I have Payne seen to date! Anyone know how fast the train was going around 20 mins in?",
+                        Friends : [ 
+                                { 
+                                Name: "Phil Smith",
+                                Age: 36,
+                                },
+                                { 
+                                Name: "Ross Payne",
+                                Age: 62,
+                                },
+                                { 
+                                Name: "Paul Payne",
+                                Age: 58,
+                                },
+                        ],
+                        Siblings : [ 
+                                { 
+                                Age: 58,
+                                Name: "Paul Payne",
+                                Comment: "A foggy snowy morning lit with Smith sodium lamps is an absolute dream",
+                                },
+                                { 
+                                Age: 62,
+                                Name: "Ross Payne",
+                                Comment: "Another fun  video. Loved it my Payne Grandmother was from Passau. Dad was over in Germany but there was something going on over there at the time we won't discuss right now. Thanks for posting it. Have a great weekend everyone.",
+                                },
+                        ]
+                        }
+                ]
+                }
+        ]
+        }`
 
-	expectedTouchLvl = []int{3, 6, 26}
-	expectedTouchNodes = 35
+	expectedTouchLvl = []int{3, 2, 10}
+	expectedTouchNodes = 15
 
 	stmt := Execute("Relationship", input)
 	result := stmt.MarshalJSON()
 	t.Log(stmt.String())
 
 	validate(t, result)
+	//Shutdown()
+}
 
+func TestUPredFilter4ac(t *testing.T) {
+
+	//  (le(Age,40) or eq(Name,"Ian Payne")) and ge(Age,62) )        x
+	//  le(Age,40) or eq(Name,"Ian Payne") and ge(Age,62) )          -
+	//   le(Age,40) or eq(Name,"Ian Payne") and le (Age,62)          -
+	//   le(Age,40) or eq(Name,"Ian Payne")                          -
+	//   (le(Age,40) or eq(Name,"Ian Payne") )                       -
+	//.   (le(Age,40) and eq(Name,"Ian Payne") )                     -
+	//   ge(Age,62) and ( le(Age,40) or eq(Name,"Ian Payne") )       -
+	//
+	input := `{
+  directors(func: eq(count(Siblings), 2) ) {
+    Age
+    Name
+    Friends @filter( (le(Age,40) or eq(Name,"Ian Payne")) and ge(Age,62)    ) {
+      Age
+    	Name
+    	Comment
+    	Friends   {
+    	  Name
+    	  Age
+    	  Friends {
+    	  	Name
+    	  	Age
+    	  }
+	    }
+    	Siblings {
+    		Age
+    		Name
+    		Comment
+	   	}
+  }
+}
+}`
+	expectedJSON = `{
+        data: [
+                {
+                Age : 62,
+                Name : "Ross Payne",
+                Friends : [
+                        {
+                        Age: 67,
+                        Name: "Ian Payne",
+                        Comment: "One of the best cab rides I have Payne seen to date! Anyone know how fast the train was going around 20 mins in?",
+                        Friends : [
+                                {
+                                Name: "Phil Smith",
+                                Age: 36,
+                                Friends : [
+                                        {
+                                        Name: "Paul Payne",
+                                        Age: 58,
+                                        },
+                                        {
+                                        Name: "Ross Payne",
+                                        Age: 62,
+                                        },
+                                        {
+                                        Name: "Ian Payne",
+                                        Age: 67,
+                                        },
+                                ]
+                                },
+                                {
+                                Name: "Ross Payne",
+                                Age: 62,
+                                Friends : [
+                                        {
+                                        Name: "Phil Smith",
+                                        Age: 36,
+                                        },
+                                        {
+                                        Name: "Ian Payne",
+                                        Age: 67,
+                                        },
+                                ]
+                                },
+                                {
+                                Name: "Paul Payne",
+                                Age: 58,
+                                Friends : [
+                                        {
+                                        Name: "Ross Payne",
+                                        Age: 62,
+                                        },
+                                        {
+                                        Name: "Ian Payne",
+                                        Age: 67,
+                                        },
+                                ]
+                                },
+                        ],
+                        Siblings : [
+                                {
+                                Age: 58,
+                                Name: "Paul Payne",
+                                Comment: "A foggy snowy morning lit with Smith sodium lamps is an absolute dream",
+                                },
+                                {
+                                Age: 62,
+                                Name: "Ross Payne",
+                                Comment: "Another fun  video. Loved it my Payne Grandmother was from Passau. Dad was over in Germany but there was something going on over there at the time we won't discuss right now. Thanks for posting it. Have a great weekend everyone.",
+                                },
+                        ]
+                        }
+                ]
+                },
+                {
+                Age : 67,
+                Name : "Ian Payne",
+                Friends : [
+                ]
+                },
+                {
+                Age : 58,
+                Name : "Paul Payne",
+                Friends : [
+                        {
+                        Age: 67,
+                        Name: "Ian Payne",
+                        Comment: "One of the best cab rides I have Payne seen to date! Anyone know how fast the train was going around 20 mins in?",
+                        Friends : [
+                                {
+                                Name: "Phil Smith",
+                                Age: 36,
+                                Friends : [
+                                        {
+                                        Name: "Paul Payne",
+                                        Age: 58,
+                                        },
+                                        {
+                                        Name: "Ross Payne",
+                                        Age: 62,
+                                        },
+                                        {
+                                        Name: "Ian Payne",
+                                        Age: 67,
+                                        },
+                                ]
+                                },
+                                {
+                                Name: "Ross Payne",
+                                Age: 62,
+                                Friends : [
+                                        {
+                                        Name: "Phil Smith",
+                                        Age: 36,
+                                        },
+                                        {
+                                        Name: "Ian Payne",
+                                        Age: 67,
+                                        },
+                                ]
+                                },
+                                {
+                                Name: "Paul Payne",
+                                Age: 58,
+                                Friends : [
+                                        {
+                                        Name: "Ross Payne",
+                                        Age: 62,
+                                        },
+                                        {
+                                        Name: "Ian Payne",
+                                        Age: 67,
+                                        },
+                                ]
+                                },
+                        ],
+                        Siblings : [
+                                {
+                                Age: 58,
+                                Name: "Paul Payne",
+                                Comment: "A foggy snowy morning lit with Smith sodium lamps is an absolute dream",
+                                },
+                                {
+                                Age: 62,
+                                Name: "Ross Payne",
+                                Comment: "Another fun  video. Loved it my Payne Grandmother was from Passau. Dad was over in Germany but there was something going on over there at the time we won't discuss right now. Thanks for posting it. Have a great weekend everyone.",
+                                },
+                        ]
+                        }
+                ]
+                }
+        ]
+        }`
+
+	expectedTouchLvl = []int{3, 2, 10, 14}
+	expectedTouchNodes = 29
+
+	stmt := Execute("Relationship", input)
+	result := stmt.MarshalJSON()
+	t.Log(stmt.String())
+
+	validate(t, result)
+	//Shutdown()
 }
 
 func TestUPredFilter4b(t *testing.T) {
@@ -681,13 +998,13 @@ func TestRootHasWithFilter(t *testing.T) {
 	input := `{
 	  me(func: has(Siblings)) @filter(has(Address)) {
 	    Name
-		Address
-		Age
-		Siblings {
-			Name
-			Age
-		}
-	    }
+		  Address
+		  Age
+		  Siblings {
+		  	Name
+			  Age
+		  }
+	  }
 	}`
 
 	expectedTouchLvl = []int{1, 2}

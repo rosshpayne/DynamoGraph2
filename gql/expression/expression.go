@@ -54,7 +54,7 @@ func walk(e operand, nv ds.NVmap, v node) {
 
 	if e, ok := e.(*Expression); ok {
 
-		if e.left == nil {
+		if e.left == nil && e.opr != "-" {
 			return
 		}
 
@@ -79,7 +79,7 @@ func walk(e operand, nv ds.NVmap, v node) {
 
 			e.result = e.left.getResult(nv, v)
 
-		default: //  represents ( )
+		default: // "-" represents ( )
 
 			e.result = e.right.getResult(nv, v)
 
@@ -288,6 +288,7 @@ func makeExpr(l operand, op token.TokenType, r operand) (*Expression, token.Toke
 // c - current op node, n is the higer order op we want to extend right
 func (c *Expression) extendRight(n *Expression) *Expression {
 
+	fmt.Println("epression extendRight n=%#v\n", *n)
 	c.right = n
 	n.parent = c
 	return n

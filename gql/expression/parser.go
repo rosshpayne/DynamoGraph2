@@ -109,7 +109,7 @@ func (p *Parser) nextToken(s ...string) {
 func (p *Parser) ParseFunction(s *FilterFunc, tc *token.Token) *Parser {
 
 	//
-	fmt.Printf("in ParseFunction: %#v %#v %#v \n", s, p.curToken, tc)
+	fmt.Printf("in ParseFunction: d,s=%#v    curToken:  %#v    tc=%#v \n", s, p.curToken, tc)
 
 	gqlf := &ast.GQLFunc{}
 	gqlf.AssignName(tc.Literal, tc.Loc)
@@ -197,7 +197,7 @@ func (p *Parser) ParseFunction(s *FilterFunc, tc *token.Token) *Parser {
 		}
 		p.nextToken() // read over has value
 		p.nextToken() // read over )
-		fmt.Printf("GT..................... %#v  %#v \n", gqlf, p.curToken)
+		fmt.Printf(" %s ..................... \ngqlf: %#v  \np.curToken: %#v \n", tc.Literal, gqlf, p.curToken)
 		return p
 
 	case token.HAS:

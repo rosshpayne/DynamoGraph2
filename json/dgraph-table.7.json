@@ -106,7 +106,8 @@
                 }
             ], 
              "Projection": {
-                "ProjectionType": "KEYS_ONLY"
+                "ProjectionType": "INCLUDE",
+                "NonKeyAttributes" : [ "S" ]
             }
         }
     ]

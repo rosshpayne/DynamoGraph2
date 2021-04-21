@@ -1,0 +1,80 @@
+_:abc __type "Person" . /* specify type for blank node */
+_:abc __ID "66PNdV1TSKOpDRlO71+Aow==" . /* user supplied node UUID rather than system generated. Why? For more consistent testing*/
+_:abc Name "Ross Payne" .
+_:abc DOB "13 March 1958" .
+_:abc Age "62" .
+_:abc Siblings _:b  .
+_:abc Friends _:d .
+_:abc Friends _:c .
+_:abc Siblings _:c  .
+_:abc Cars "Fiat"  .
+_:abc Cars "Honda"  .
+_:abc Cars "Alfa"   .  
+_:abc Address "67/55 Burkitt St Page, ACT, Australia"
+_:abc Comment "Another fun  video. Loved it my Payne Grandmother was from Passau. Dad was over in Germany but there was something going on over there at the time we won't discuss right now. Thanks for posting it. Have a great weekend everyone." .
+_:abc SalaryLast3Year "112000" .
+_:abc SalaryLast3Year "152000" .
+_:abc SalaryLast3Year "218000" .
+
+_:b __type "Person" . /* specify type for blank node */
+_:b __ID "TsI2Qay8T2SxnOcuI3pPeg==" .
+_:b Name "Paul Payne" .
+_:b DOB "2 June 1960"  .
+_:b Age "58"  .
+_:b Siblings _:abc  .
+_:b Siblings _:c  .
+_:b Cars "Holden Commodore"  .  // specify type for blank node 
+_:b Cars "Honda"  .
+_:b Cars "VW Golf"   . 
+_:b Friends _:abc .
+_:b Friends _:c .
+_:b Comment "A foggy snowy morning lit with Smith sodium lamps is an absolute dream" .
+_:b SalaryLast3Year "100000" .
+_:b SalaryLast3Year "122000" .
+_:b SalaryLast3Year "145000" .
+
+_:c __type "Person" . /* specify type for blank node */
+_:c __ID "6KIuWuyTRKSgDqwYAghl7A==" .
+_:c Name "Ian Payne"  .
+_:c DOB "29 Jan 1953"  .
+_:c Age "67"	.
+_:c Siblings _:abc	.
+_:c Siblings _:b	.
+_:c Friends _:abc .
+_:c Friends _:b .
+_:c Friends _:d .
+_:c Cars "VW Passat"  .
+_:c Cars "Mitsubishi"  .
+_:c Cars "Ford Laser"   .  
+_:c Cars "Honda"   . 
+_:c Comment "One of the best cab rides I have Payne seen to date! Anyone know how fast the train was going around 20 mins in?" .
+_:c SalaryLast3Year "45000" .
+_:c SalaryLast3Year "90000" .
+_:c SalaryLast3Year "1000" .
+
+
+_:d __type "Person" . /* specify type for blank Payne node */
+_:d __ID "OlTBKXemTNWATwDDt6U5/A==" . 
+_:d Name "Phil Smith"  .
+_:d Siblings _:e	.
+_:d Friends _:abc .
+_:d Friends _:b .
+_:d Friends _:c .
+_:d DOB "17 June 1976"  .
+_:d Age "36"	.
+_:d Cars "Roll Roycet"  .
+_:d Cars "Bentley"   . 
+_:d Cars "Honda"   . 
+_:d Cars "VW Golf"  .
+_:d Comment "It seems to me the camera's Smith focus is better, clearer, thank you for sharing, I think Austria is a beautiful country I'm not surprised that it produced so many great classical musicians." .
+
+_:e __type "Person" . /* specify type for blank node */
+_:e __ID "6nG/Cd+dSoyD48CrXQjrLQ==" .
+_:e Name "Jenny Jones"  .
+_:e Friends _:abc .
+_:e Friends _:b .
+_:e DOB "17 February 1963"  .
+_:e Age "59"	.
+_:e Cars "Renault 302"  .
+_:e Cars "Zonda"  .
+_:e Comment "A great video Payne which I have enjoyed watching. It is always very interesting to see such beautiful scenery which I am unable to visit personally. Thank you." .

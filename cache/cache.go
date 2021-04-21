@@ -48,7 +48,7 @@ type SortKey = string
 
 // data associated with a single node
 type NodeCache struct {
-	sync.RWMutex // used for querying the cache data items
+	sync.RWMutex // used for querying the cache data items. Promoted methods RLock(), Unlock()
 	m            map[SortKey]*blk.DataItem
 	Uid          util.UID
 	ffuEnabled   bool // true for fetch-for-update operations

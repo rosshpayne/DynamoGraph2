@@ -39,8 +39,8 @@ func syslog(s string) {
 func init() {
 
 	replyCh = make(chan interface{})
-	statTouchNodes = stat.Request{Id: stat.TouchNode, ReplyCh: replyCh}
-	statTouchLvl = stat.Request{Id: stat.TouchLvl, ReplyCh: replyCh}
+	statTouchNodes = stat.Request{Id: stat.TouchNodeFiltered, ReplyCh: replyCh}
+	statTouchLvl = stat.Request{Id: stat.TouchLvlFiltered, ReplyCh: replyCh}
 	statDbFetches = stat.Request{Id: stat.NodeFetch, ReplyCh: replyCh}
 
 	Startup()
@@ -170,5 +170,5 @@ func Shutdown() {
 	cancel()
 
 	ctxEnd.Wait()
-	syslog("Shutdown...")
+	syslog("Shutdown Completed")
 }

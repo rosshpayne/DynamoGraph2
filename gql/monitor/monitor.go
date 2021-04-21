@@ -14,6 +14,8 @@ const (
 	PassRootFilter
 	TouchNode
 	TouchLvl
+	TouchNodeFiltered
+	TouchLvlFiltered
 	NodeFetch
 	DBFetch // total db Fetch API calls
 	// CapacityUnits // consumed capacity units
@@ -111,6 +113,31 @@ func PowerOn(ctx context.Context, wps *sync.WaitGroup, wgEnd *sync.WaitGroup) {
 					for len(a)-1 < s.Lvl {
 						a = append(a, 0)
 						stats[TouchLvl] = a
+					}
+					a[s.Lvl] += 1
+				}
+
+			case TouchNodeFiltered:
+				// increment total counter and Level counter
+
+				if stats[x] == nil {
+					stats[x] = 1
+					a := make([]int, 1, 1)
+					stats[TouchLvlFiltered] = a
+					// build slice to hold level counters
+					for len(a) < s.Lvl {
+						a = append(a, 0)
+						stats[TouchLvlFiltered] = a
+					}
+					a[s.Lvl] += 1
+				} else {
+					n, _ = stats[x].(int)
+					stats[x] = n + 1
+					a := stats[TouchLvlFiltered].([]int)
+					// extend slice to hold level counters (if necessary)
+					for len(a)-1 < s.Lvl {
+						a = append(a, 0)
+						stats[TouchLvlFiltered] = a
 					}
 					a[s.Lvl] += 1
 				}

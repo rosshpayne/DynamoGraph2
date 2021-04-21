@@ -32,8 +32,9 @@ func (r *RootStmt) MarshalJSON() string {
 		nvc := r.nodesc[uid]
 		nvm := r.nodes[uid]
 		// monitor: increment node touched counter
-		stat := mon.Stat{Id: mon.TouchNode, Lvl: 0}
-		mon.StatCh <- stat
+
+		stat2 := mon.Stat{Id: mon.TouchNodeFiltered, Lvl: 0}
+		mon.StatCh <- stat2
 
 		out.WriteString(fmt.Sprintf("\t{\n"))
 
@@ -80,10 +81,14 @@ func (r *RootStmt) MarshalJSON() string {
 					for j, v := range uids {
 						s.Reset()
 						if upred.State[i][j] == blk.UIDdetached || upred.State[i][j] == blk.EdgeFiltered {
+							stat := mon.Stat{Id: mon.TouchNode, Lvl: x.lvl}
+							mon.StatCh <- stat
 							continue // edge soft delete set or edge failed filter condition in GQL stmt
 						}
 						// monitor: increment touch counter
 						stat := mon.Stat{Id: mon.TouchNode, Lvl: x.lvl}
+						mon.StatCh <- stat
+						stat = mon.Stat{Id: mon.TouchNodeFiltered, Lvl: x.lvl}
 						mon.StatCh <- stat
 
 						s.WriteString(fmt.Sprintf("%s{ \n", strings.Repeat("\t", 2)))
@@ -194,10 +199,14 @@ func (u *UidPred) marshalJSON(uid_ []uint8, out *strings.Builder) {
 				for j, v := range uids {
 					//fmt.Printf("i, j, UID: %d %d, %s", i, j, util.UID(v).String())
 					if upred_.State[i][j] == blk.UIDdetached || upred_.State[i][j] == blk.EdgeFiltered {
+						stat := mon.Stat{Id: mon.TouchNode, Lvl: x.lvl}
+						mon.StatCh <- stat
 						continue // soft delete set or failed filter condition
 					}
 					s.Reset()
 					stat := mon.Stat{Id: mon.TouchNode, Lvl: x.lvl}
+					mon.StatCh <- stat
+					stat = mon.Stat{Id: mon.TouchNodeFiltered, Lvl: x.lvl}
 					mon.StatCh <- stat
 
 					s.WriteString(fmt.Sprintf("%s{ \n", strings.Repeat("\t", u.lvl+1)))
@@ -207,6 +216,10 @@ func (u *UidPred) marshalJSON(uid_ []uint8, out *strings.Builder) {
 					for _, scalar := range spred {
 
 						pred := scalar.Name[strings.Index(scalar.Name, ":")+1:]
+						// trailing : ignore for output. //TODO : check why
+						if strings.Index(pred, ":") > -1 {
+							continue
+						}
 						switch z := scalar.Value.(type) {
 						case [][]string:
 							s.WriteString(fmt.Sprintf("%s%s: %q,\n", strings.Repeat("\t", u.lvl+1), pred, z[i][j]))
